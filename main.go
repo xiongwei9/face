@@ -4,22 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	thriftParser "github.com/cloudwego/thriftgo/parser"
 	"github.com/samuel/go-thrift/parser"
 )
 
 func main() {
-	useThriftGo()
 	useGoThrift()
-}
-
-func useThriftGo() {
-	parserThrift, err := thriftParser.ParseFile("./idl/service.thrift", nil, true)
-	if err != nil {
-		fmt.Printf("parse error: %v", err)
-		os.Exit(1)
-	}
-	fmt.Printf("parse ok: %v", parserThrift)
 }
 
 func useGoThrift() {
