@@ -1,36 +1,35 @@
 package parser
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/samuel/go-thrift/parser"
 )
 
-func ParseThrift(contents string) {
-	parser := &parser.Parser{}
-	thrift, err := parser.Parse(strings.NewReader(contents))
+func ParseThrift(contents string) error {
+	p := &parser.Parser{}
+	thrift, err := p.Parse(strings.NewReader(contents))
 	if err != nil {
-		fmt.Println("parse error")
-		os.Exit(1)
+		return err
 	}
-	fmt.Printf("parse success: %v", thrift)
+
+	entry := "/tmp/tmp.thrift"
+	files := map[string]*parser.Thrift{entry: thrift}
+	g := NewGenerator(files, entry)
+	g.genThrift()
+
+	return nil
 }
 
-func ParseThriftFile(pathStr string) {
+func ParseThriftFile(pathStr string) error {
 	p := &parser.Parser{Filesystem: nil}
 	parsedThrift, filename, err := p.ParseFile(pathStr)
 	if err != nil {
-		fmt.Println("parse error")
-		os.Exit(1)
+		return err
 	}
 
-	entryThrift, ok := parsedThrift[filename]
-	if !ok {
-		fmt.Println("parse error")
-		os.Exit(1)
-	}
+	g := NewGenerator(parsedThrift, filename)
+	g.genThrift()
 
-	fmt.Printf("parse success: %s %v", filename, entryThrift)
+	return nil
 }
