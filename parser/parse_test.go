@@ -5,6 +5,7 @@ import "testing"
 func TestParseThrift(t *testing.T) {
 	ParseThrift(
 		`
+		namespace go face.test
 		struct UserInfo {
 			1: required string openId
 			2: optional string userName
