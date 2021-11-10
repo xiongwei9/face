@@ -1,1 +1,1 @@
-r.{{ .apiMethod }}("{{ .apiPath }}", func {{ .apiName }}(c *gin.Context) {})
+r.{{ .apiMethod }}("{{ .apiPath }}", {{ .apiName }})
