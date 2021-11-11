@@ -3,7 +3,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,19 +27,55 @@ type UserInfoRequest struct {
 	OpenId string `form:"openId" binding:"required"`
 }
 
-func NewMethod(fn func(r *gin.Context, params UserInfoRequest) (*UserInfo, error)) func(r *gin.Context) {
+func valOf(i ...interface{}) []reflect.Value {
+	var rt []reflect.Value
+	for _, i2 := range i {
+		rt = append(rt, reflect.ValueOf(i2))
+	}
+	return rt
+}
+
+func NewMethod(fn interface{}) func(r *gin.Context) {
+	// Test
+	{
+		var getUserInfoFn interface{} = getUserInfo
+		funcType := reflect.TypeOf(getUserInfoFn)
+		funcValue := reflect.ValueOf(getUserInfoFn)
+		if funcType.Kind() != reflect.Func {
+			panic("The route handler must be a function")
+		}
+
+		paramRef := funcType.In(1)
+		fmt.Printf("%v, %v", funcValue, paramRef)
+	}
+
+	funcType := reflect.TypeOf(fn)
+	funcValue := reflect.ValueOf(fn)
+	if funcType.Kind() != reflect.Func {
+		panic("The route handler must be a function")
+	}
+
+	i := funcType.NumIn()
+	fmt.Println(i)
+	paramRef := funcType.In(1)
+	paramType := paramRef.Elem()
+	// param := reflect.New(paramType).Interface()
 	return func(r *gin.Context) {
-		var params UserInfoRequest
-		if err := r.ShouldBind(&params); err != nil {
+		param := reflect.New(paramType).Interface()
+		if err := r.ShouldBind(&param); err != nil {
 			r.String(http.StatusBadRequest, err.Error())
 		}
 
-		data, err := fn(r, params)
-		if err != nil {
-			r.String(http.StatusInternalServerError, err.Error())
+		resp := funcValue.Call(valOf(r, param))
+		if len(resp) != 2 {
+			r.String(http.StatusInternalServerError, "system error")
+		}
+		if resp != nil {
+			msg := resp[1].MethodByName("Error").Call(nil)
+			r.String(http.StatusInternalServerError, msg[0].String())
 			return
 		}
-		r.JSON(http.StatusOK, data)
+		r.JSON(http.StatusOK, resp[0])
 	}
 }
 
