@@ -2,6 +2,9 @@
 package main
 
 import (
+	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,17 +17,41 @@ import (
 type UserInfo struct {
 	OpenId   string
 	UserName string
+	Email    string
+	Phone    string
 }
 
-func NewMethod(fn func(r *gin.Context, target string) (*UserInfo, error)) func(r *gin.Context) {
+type UserInfoRequest struct {
+	OpenId string `form:"openId" binding:"required"`
+}
+
+func NewMethod(fn func(r *gin.Context, params UserInfoRequest) (*UserInfo, error)) func(r *gin.Context) {
 	return func(r *gin.Context) {
-		target := r.Param("target")
-		fn(r, target)
+		var params UserInfoRequest
+		if err := r.ShouldBind(&params); err != nil {
+			r.String(http.StatusBadRequest, err.Error())
+		}
+
+		data, err := fn(r, params)
+		if err != nil {
+			r.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		r.JSON(http.StatusOK, data)
 	}
 }
 
-func getUserInfo(r *gin.Context, target string) (*UserInfo, error) {
-	return nil, nil
+func getUserInfo(r *gin.Context, params UserInfoRequest) (*UserInfo, error) {
+	if params.OpenId == "" {
+		return nil, errors.New("params error")
+	}
+	userInfo := &UserInfo{
+		UserName: params.OpenId,
+		OpenId:   params.OpenId,
+		Email:    params.OpenId + "@foxmail.com",
+		Phone:    "-",
+	}
+	return userInfo, nil
 }
 
 func BaseRouteGroup(r *gin.RouterGroup) {
