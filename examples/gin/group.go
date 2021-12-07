@@ -3,7 +3,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"reflect"
 
@@ -16,15 +15,15 @@ import (
 // 	})
 // }
 
-type UserInfo struct {
-	OpenId   string
-	UserName string
-	Email    string
-	Phone    string
+type UserInfoResponse struct {
+	OpenId   string `json:"openId"`
+	UserName string `json:"useName"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
 }
 
 type UserInfoRequest struct {
-	OpenId string `form:"openId" binding:"required"`
+	OpenId string `form:"openId"`
 }
 
 func valOf(i ...interface{}) []reflect.Value {
@@ -36,56 +35,44 @@ func valOf(i ...interface{}) []reflect.Value {
 }
 
 func NewMethod(fn interface{}) func(r *gin.Context) {
-	// Test
-	{
-		var getUserInfoFn interface{} = getUserInfo
-		funcType := reflect.TypeOf(getUserInfoFn)
-		funcValue := reflect.ValueOf(getUserInfoFn)
-		if funcType.Kind() != reflect.Func {
-			panic("The route handler must be a function")
-		}
-
-		paramRef := funcType.In(1)
-		fmt.Printf("%v, %v", funcValue, paramRef)
-	}
-
 	funcType := reflect.TypeOf(fn)
 	funcValue := reflect.ValueOf(fn)
 	if funcType.Kind() != reflect.Func {
 		panic("The route handler must be a function")
 	}
-
-	i := funcType.NumIn()
-	fmt.Println(i)
 	paramRef := funcType.In(1)
 	paramType := paramRef.Elem()
-	// param := reflect.New(paramType).Interface()
+
 	return func(r *gin.Context) {
 		param := reflect.New(paramType).Interface()
-		if err := r.ShouldBind(&param); err != nil {
+		if err := r.ShouldBind(param); err != nil {
 			r.String(http.StatusBadRequest, err.Error())
+			return
 		}
 
 		resp := funcValue.Call(valOf(r, param))
 		if len(resp) != 2 {
 			r.String(http.StatusInternalServerError, "system error")
+			return
 		}
-		if resp != nil {
+		if !resp[1].IsNil() {
 			msg := resp[1].MethodByName("Error").Call(nil)
 			r.String(http.StatusInternalServerError, msg[0].String())
 			return
 		}
-		r.JSON(http.StatusOK, resp[0])
+
+		result := resp[0].Interface()
+		r.JSON(http.StatusOK, result)
 	}
 }
 
-func getUserInfo(r *gin.Context, params UserInfoRequest) (*UserInfo, error) {
+func getUserInfo(r *gin.Context, params *UserInfoRequest) (*UserInfoResponse, error) {
 	if params.OpenId == "" {
 		return nil, errors.New("params error")
 	}
-	userInfo := &UserInfo{
-		UserName: params.OpenId,
+	userInfo := &UserInfoResponse{
 		OpenId:   params.OpenId,
+		UserName: params.OpenId,
 		Email:    params.OpenId + "@foxmail.com",
 		Phone:    "-",
 	}
