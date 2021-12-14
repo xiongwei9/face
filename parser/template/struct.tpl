@@ -1,5 +1,5 @@
 {{ $root := . }}
 type {{ .Name }} struct {
-    {{ range $idx, $value := .Values }} {{ $value.Name }} = {{ $value.Value }}
+    {{ range $idx, $field := .Fields }} {{ $field.Name }} {{ $field.Type }}
     {{ end }}
 }
