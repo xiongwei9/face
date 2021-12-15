@@ -36,13 +36,10 @@ func NewCodeBuilder() *CodeBuilder {
 }
 
 func typeTranslate(thriftType *parser.Type) (string, error) {
-
 	if fieldType, ok := PrimitiveTypeThrift2Go[thriftType.Name]; ok {
 		return fieldType, nil
 	}
-	// if thriftType.Name == "list" {
-	// 	return fmt.Sprintf("[]")
-	// }
+
 	switch thriftType.Name {
 	case "list":
 		valType, err := typeTranslate(thriftType.ValueType)
@@ -67,6 +64,55 @@ func typeTranslate(thriftType *parser.Type) (string, error) {
 
 	return thriftType.Name, nil
 	// return "", fmt.Errorf("[typeTranslate]not found any type")
+}
+
+func (b *CodeBuilder) BuildService(services map[string]*parser.Service) error {
+	tpl, err := template.ParseFiles("./template/service.tpl")
+	if err != nil {
+		return err
+	}
+
+	for name, service := range services {
+		methods := make([]face_template.ServiceMethod, 0, len(service.Methods))
+
+		for methodName, method := range service.Methods {
+			var httpPath, httpMethod string
+			for _, annotation := range method.Annotations {
+				switch strings.ToLower(annotation.Name) {
+				case "api.get":
+					httpMethod = http.MethodGet
+					httpPath = annotation.Value
+				case "api.post":
+					httpMethod = http.MethodPost
+					httpPath = annotation.Value
+				}
+			}
+			returnType, err := typeTranslate(method.ReturnType)
+			if err != nil {
+				return err
+			}
+			argumentType, err := typeTranslate(method.Arguments[0].Type)
+			if err != nil {
+				return err
+			}
+
+			serviceMethod := face_template.ServiceMethod{
+				Name:         methodName,
+				HttpPath:     httpPath,
+				HttpMethod:   httpMethod,
+				ReturnType:   returnType,
+				ArgumentType: argumentType,
+			}
+			methods = append(methods, serviceMethod)
+
+		}
+		serviceData := face_template.Service{
+			Name:    name,
+			Methods: methods,
+		}
+		tpl.Execute(&b.ServiceBuilder, serviceData)
+	}
+	return nil
 }
 
 func (b *CodeBuilder) BuildStruct(structs map[string]*parser.Struct) error {
@@ -97,40 +143,6 @@ func (b *CodeBuilder) BuildStruct(structs map[string]*parser.Struct) error {
 			return err
 		}
 	}
-	fmt.Printf("%s\n", b.StructBuilder.String())
-	return nil
-}
-
-// TODO: method.tpl for a whole router-group
-func (b *CodeBuilder) BuildService(srv *parser.Service) error {
-
-	tpl, err := template.ParseFiles("./template/method.tpl")
-	if err != nil {
-		return err
-	}
-
-	for methodName, method := range srv.Methods {
-
-		var apiPath, apiMethod string
-		for _, annotation := range method.Annotations {
-			switch strings.ToLower(annotation.Name) {
-			case "api.get":
-				apiMethod = http.MethodGet
-				apiPath = annotation.Value
-			case "api.post":
-				apiMethod = http.MethodPost
-				apiPath = annotation.Value
-			}
-		}
-
-		tpl.Execute(&b.ServiceBuilder, map[string]string{
-			"apiPath":   apiPath,
-			"apiMethod": apiMethod,
-			"apiName":   methodName,
-		})
-	}
-
-	fmt.Printf("result:\n%s\n", b.ServiceBuilder.String())
 	return nil
 }
 

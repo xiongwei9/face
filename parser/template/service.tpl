@@ -1,6 +1,15 @@
+{{ $root := . }}
+type {{ $root.Name }} struct {}
 
-type {{ .serviceName }} struct {}
+{{ range $idx, $method := $root.Methods  }}func (s *{{ $root.Name }}) {{ $method.Name }}(c *gin.Context, params *{{ $method.ArgumentType }}) (*{{ $method.ReturnType }}, error) {
+    var resp *{{ $method.ReturnType }} = nil // TODO
+    return resp, nil
+}
+{{ end }}
 
-{{ range  }}func (s *{{ .serviceName }}) {{ .methodName }}(c *gin.Context) {
+func {{ $root.Name }}_RouteGroup(r *gin.RouterGroup) {
+    s := &{{ $root.Name }}{}
+{{ range $idx, $method := $root.Methods }}
+    r.{{ $method.HttpMethod }}("{{ $method.HttpPath }}", NewMethod(s.{{ $method.Name }})) {{ end }}
 
-} {{ end }}
+}
