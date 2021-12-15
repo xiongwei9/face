@@ -1,1 +1,0 @@
-r.{{ .apiMethod }}("{{ .apiPath }}", {{ .apiName }})
