@@ -16,3 +16,16 @@ type Struct struct {
 	Name   string
 	Fields []StructField
 }
+
+type ServiceMethod struct {
+	Name         string
+	HttpMethod   string
+	HttpPath     string
+	ArgumentType string
+	ReturnType   string
+}
+
+type Service struct {
+	Name    string
+	Methods []ServiceMethod
+}

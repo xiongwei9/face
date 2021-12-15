@@ -46,5 +46,10 @@ func (g *Generator) genThriftFile(thrift *parser.Thrift) error {
 	if err != nil {
 		return fmt.Errorf("[Generator] BuildStruct failed: %v", err)
 	}
+	err = codeBuilder.BuildService(thrift.Services)
+	if err != nil {
+		return fmt.Errorf("[Generator] BuildService failed: %v", err)
+	}
+	fmt.Printf("%s\n%s\n%s\n", codeBuilder.EnumBuilder.String(), codeBuilder.StructBuilder.String(), codeBuilder.ServiceBuilder.String())
 	return nil
 }
