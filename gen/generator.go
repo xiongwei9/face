@@ -1,4 +1,4 @@
-package parser
+package gen
 
 import (
 	"fmt"
@@ -7,35 +7,26 @@ import (
 )
 
 type Generator struct {
-	thriftFiles map[string]*parser.Thrift
-	entry       string
+	ThriftFiles map[string]*parser.Thrift
+	Entry       string
 }
 
 func NewGenerator(thriftFiles map[string]*parser.Thrift, entry string) *Generator {
 	return &Generator{
-		thriftFiles: thriftFiles,
-		entry:       entry,
+		ThriftFiles: thriftFiles,
+		Entry:       entry,
 	}
 }
 
-func (g *Generator) genThrift() error {
-	// thrift := g.thriftFiles[g.entry]
-	// for srvName, srv := range thrift.Services {
-	// 	fmt.Printf("%s, %v\n", srvName, srv)
-	// 	g.genService(srv)
-	// }
-	// return nil
-
-	entryFile := g.entry
-	thrift := g.thriftFiles[entryFile]
-	err := g.genThriftFile(thrift)
-
-	// for fileName, thrift := range g.thriftFiles {}
+func (g *Generator) GenCode() error {
+	entryFile := g.Entry
+	thrift := g.ThriftFiles[entryFile]
+	err := g.genCode(thrift)
 
 	return err
 }
 
-func (g *Generator) genThriftFile(thrift *parser.Thrift) error {
+func (g *Generator) genCode(thrift *parser.Thrift) error {
 	codeBuilder := NewCodeBuilder()
 	var err error
 	err = codeBuilder.BuildEnums(thrift.Enums)

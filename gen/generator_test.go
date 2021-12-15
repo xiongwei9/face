@@ -1,9 +1,11 @@
-package parser
+package gen
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestParseThrift(t *testing.T) {
-	err := ParseThrift(
+func TestGenThrift(t *testing.T) {
+	thriftFiles, entryFile, err := ParseThrift(
 		`
 		namespace go face.test
 		enum Sex {
@@ -32,8 +34,28 @@ func TestParseThrift(t *testing.T) {
 		t.Errorf("ParseThrift failed: %v", err)
 		return
 	}
+
+	g := NewGenerator(thriftFiles, entryFile)
+	err = g.GenCode()
+	if err != nil {
+		t.Errorf("GenCode failed: %v", err)
+		return
+	}
+	t.Log("GenCode success")
 }
 
 func TestParseThriftFile(t *testing.T) {
-	ParseThriftFile("../idl/service.thrift")
+	thriftFiles, entryFile, err := ParseThriftFile("../idl/service.thrift")
+	if err != nil {
+		t.Errorf("ParseThriftFile failed: %v", err)
+		return
+	}
+
+	g := NewGenerator(thriftFiles, entryFile)
+	err = g.GenCode()
+	if err != nil {
+		t.Errorf("GenCode failed: %v", err)
+		return
+	}
+	t.Log("GenCode success")
 }

@@ -1,4 +1,4 @@
-package parser
+package gen
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/samuel/go-thrift/parser"
-	face_template "github.com/xiongwei9/face/parser/template"
+	face_template "github.com/xiongwei9/face/gen/template"
 )
 
 var PrimitiveTypeThrift2Go = map[string]string{
