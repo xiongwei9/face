@@ -110,7 +110,10 @@ func (b *CodeBuilder) BuildService(services map[string]*parser.Service) error {
 			Name:    name,
 			Methods: methods,
 		}
-		tpl.Execute(&b.ServiceBuilder, serviceData)
+		err := tpl.Execute(&b.ServiceBuilder, serviceData)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
