@@ -35,7 +35,7 @@ func TestGenThrift(t *testing.T) {
 		return
 	}
 
-	g := NewGenerator(thriftFiles, entryFile)
+	g := NewGenerator(thriftFiles, entryFile, "")
 	err = g.GenCode()
 	if err != nil {
 		t.Errorf("GenCode failed: %v", err)
@@ -51,7 +51,7 @@ func TestParseThriftFile(t *testing.T) {
 		return
 	}
 
-	g := NewGenerator(thriftFiles, entryFile)
+	g := NewGenerator(thriftFiles, entryFile, "")
 	err = g.GenCode()
 	if err != nil {
 		t.Errorf("GenCode failed: %v", err)

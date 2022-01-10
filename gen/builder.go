@@ -2,10 +2,12 @@ package gen
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"text/template"
 
+	"github.com/gobuffalo/packr"
 	"github.com/samuel/go-thrift/parser"
 	face_template "github.com/xiongwei9/face/gen/template"
 )
@@ -33,6 +35,21 @@ func NewCodeBuilder() *CodeBuilder {
 		ServiceBuilder: strings.Builder{},
 		ImportBuilder:  strings.Builder{},
 	}
+}
+
+func parseTemplate(filename string) (*template.Template, error) {
+	box := packr.NewBox("./template")
+	f, err := box.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	// var text []byte
+	text, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	t := template.New(filename)
+	return t.Parse(string(text))
 }
 
 func typeTranslate(thriftType *parser.Type) (string, error) {
@@ -67,7 +84,7 @@ func typeTranslate(thriftType *parser.Type) (string, error) {
 }
 
 func (b *CodeBuilder) BuildService(services map[string]*parser.Service) error {
-	tpl, err := template.ParseFiles("./template/service.tpl")
+	tpl, err := parseTemplate("service.tpl")
 	if err != nil {
 		return err
 	}
@@ -119,7 +136,7 @@ func (b *CodeBuilder) BuildService(services map[string]*parser.Service) error {
 }
 
 func (b *CodeBuilder) BuildStruct(structs map[string]*parser.Struct) error {
-	tpl, err := template.ParseFiles("./template/struct.tpl")
+	tpl, err := parseTemplate("struct.tpl")
 	if err != nil {
 		return err
 	}
@@ -150,7 +167,7 @@ func (b *CodeBuilder) BuildStruct(structs map[string]*parser.Struct) error {
 }
 
 func (b *CodeBuilder) BuildEnums(enums map[string]*parser.Enum) error {
-	tpl, err := template.ParseFiles("./template/enum.tpl")
+	tpl, err := parseTemplate("enum.tpl")
 	if err != nil {
 		return err
 	}
