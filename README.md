@@ -1,5 +1,9 @@
 # Face 接口生成
 
+````bash
+face -i [inputFile] -o [outputDir]
+````
+
 ## 生成目录结构
 
 ````
