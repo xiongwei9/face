@@ -37,6 +37,10 @@ func (g *Generator) GenCode() error {
 func (g *Generator) genCode(thrift *parser.Thrift) (*CodeBuilder, error) {
 	codeBuilder := NewCodeBuilder()
 	var err error
+	err = codeBuilder.BuildPackages(thrift.Namespaces)
+	if err != nil {
+		return nil, fmt.Errorf("[Generator] BuildPackages failed: %v", err)
+	}
 	err = codeBuilder.BuildEnums(thrift.Enums)
 	if err != nil {
 		return nil, fmt.Errorf("[Generator] BuildEnums failed: %v", err)
@@ -53,32 +57,36 @@ func (g *Generator) genCode(thrift *parser.Thrift) (*CodeBuilder, error) {
 }
 
 func (g *Generator) writeOutputDir(c *CodeBuilder) error {
-	// 判断是否存在目录
-	outputDirInfo, statErr := os.Stat(g.OutputDir)
+	outputDir := path.Join(g.OutputDir, c.Package.Path)
+
+	// 判断是否存在目录，若不存在则创建目录
+	outputDirInfo, statErr := os.Stat(outputDir)
 	if statErr != nil {
 		if !os.IsNotExist(statErr) {
-			return statErr
-
+			return fmt.Errorf("output dir: %s is exists. but something failed: %v", outputDir, statErr)
 		}
-		mkdirErr := os.MkdirAll(g.OutputDir, os.ModePerm)
+		mkdirErr := os.MkdirAll(outputDir, os.ModePerm)
 		if mkdirErr != nil {
-			return mkdirErr
+			return fmt.Errorf("mkdir for %s failed. message: %v", outputDir, mkdirErr)
 		}
 	} else if !outputDirInfo.IsDir() {
-		return fmt.Errorf("%s is not dictionary", g.OutputDir)
+		return fmt.Errorf("%s is not dictionary", outputDir)
 	}
 
-	// TODO: fmt error & path join
+	// TODO: path join in Windows
+	// 以入口thrift文件名为所生成的go文件名
 	goFilename := getGoFilename(g.Entry)
-	targetFilename := path.Join(g.OutputDir, goFilename)
+	targetFilename := path.Join(outputDir, goFilename)
 	file, fileErr := os.Create(targetFilename)
 	if fileErr != nil {
-		return fileErr
+		return fmt.Errorf("create file: %s failed. message: %v", targetFilename, fileErr)
 	}
-	codeText := fmt.Sprintf("%s\n%s\n%s\n", c.EnumBuilder.String(), c.StructBuilder.String(), c.ServiceBuilder.String())
+
+	// 拼接所生成的代码块，写入文件
+	codeText := fmt.Sprintf("%s\n%s\n%s\n%s\n", c.Package.Code, c.EnumBuilder.String(), c.StructBuilder.String(), c.ServiceBuilder.String())
 	_, writeErr := file.WriteString(codeText)
 	if writeErr != nil {
-		return writeErr
+		return fmt.Errorf("write file: %s failed. message: %v", targetFilename, writeErr)
 	}
 	return nil
 }
@@ -86,7 +94,5 @@ func (g *Generator) writeOutputDir(c *CodeBuilder) error {
 func getGoFilename(originFilename string) string {
 	wholeName := path.Base(originFilename)
 	suffix := path.Ext(originFilename)
-
-	goName := fmt.Sprintf("%s.go", wholeName[0:len(wholeName)-len(suffix)])
-	return goName
+	return fmt.Sprintf("%s.go", wholeName[0:len(wholeName)-len(suffix)])
 }
