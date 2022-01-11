@@ -19,9 +19,9 @@
             "program": "${workspaceFolder}/main.go",
             "args": [
                 "-i",
-                ".\\examples\\gin_gen\\idl\\user.thrift",
+                "./examples/gin_gen/idl/user.thrift",
                 "-o",
-                ".\\examples\\gin_gen\\router",
+                "./examples/gin_gen/router",
             ],
         }
     ]
