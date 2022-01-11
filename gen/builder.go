@@ -21,11 +21,17 @@ var PrimitiveTypeThrift2Go = map[string]string{
 	"string": "string",
 }
 
+type PackageInfo struct {
+	Code string
+	Path string
+}
+
 type CodeBuilder struct {
 	StructBuilder  strings.Builder
 	EnumBuilder    strings.Builder
 	ServiceBuilder strings.Builder
 	ImportBuilder  strings.Builder
+	Package        *PackageInfo
 }
 
 func NewCodeBuilder() *CodeBuilder {
@@ -34,6 +40,7 @@ func NewCodeBuilder() *CodeBuilder {
 		EnumBuilder:    strings.Builder{},
 		ServiceBuilder: strings.Builder{},
 		ImportBuilder:  strings.Builder{},
+		Package:        nil,
 	}
 }
 
@@ -183,6 +190,23 @@ func (b *CodeBuilder) BuildEnums(enums map[string]*parser.Enum) error {
 		err := tpl.Execute(&b.EnumBuilder, enumData)
 		if err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func (b *CodeBuilder) BuildPackages(namespaces map[string]string) error {
+	fmt.Printf("namespaces")
+	for key, pack := range namespaces {
+		if key == "go" {
+			packagePath := strings.ReplaceAll(pack, ".", "/")
+			packageSplit := strings.Split(pack, ".")
+
+			b.Package = &PackageInfo{
+				Code: fmt.Sprintf("package %s", packageSplit[len(packageSplit)-1]),
+				Path: packagePath,
+			}
+			return nil
 		}
 	}
 	return nil
