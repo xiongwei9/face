@@ -8,8 +8,9 @@ type Enum struct {
 }
 
 type StructField struct {
-	Name string
-	Type string
+	Name    string
+	Type    string
+	JsonKey string
 }
 
 type Struct struct {

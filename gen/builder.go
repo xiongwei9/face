@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/ginkgoch/godash"
 	"github.com/gobuffalo/packr"
 	"github.com/samuel/go-thrift/parser"
 	face_template "github.com/xiongwei9/face/gen/template"
@@ -155,9 +156,14 @@ func (b *CodeBuilder) BuildStruct(structs map[string]*parser.Struct) error {
 				return err
 			}
 
+			name, nameErr := godash.CamelCaseWithInit(field.Name, true)
+			if nameErr != nil {
+				name = field.Name
+			}
 			structField := face_template.StructField{
-				Name: field.Name,
-				Type: fieldType,
+				Name:    name,
+				Type:    fieldType,
+				JsonKey: field.Name,
 			}
 			fields = append(fields, structField)
 		}
@@ -196,7 +202,6 @@ func (b *CodeBuilder) BuildEnums(enums map[string]*parser.Enum) error {
 }
 
 func (b *CodeBuilder) BuildPackages(namespaces map[string]string) error {
-	fmt.Printf("namespaces")
 	for key, pack := range namespaces {
 		if key == "go" {
 			packagePath := strings.ReplaceAll(pack, ".", "/")
@@ -210,4 +215,14 @@ func (b *CodeBuilder) BuildPackages(namespaces map[string]string) error {
 		}
 	}
 	return nil
+}
+
+func (b *CodeBuilder) BuildImportList() error {
+	// TODO: 拆分NewMethod函数
+	tpl, err := parseTemplate("import.tpl")
+	if err != nil {
+		return err
+	}
+	err = tpl.Execute(&b.ImportBuilder, nil)
+	return err
 }

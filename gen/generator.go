@@ -42,6 +42,10 @@ func (g *Generator) genCode(thrift *parser.Thrift) (*CodeBuilder, error) {
 	if err != nil {
 		return nil, fmt.Errorf("[Generator] BuildPackages failed: %v", err)
 	}
+	err = codeBuilder.BuildImportList()
+	if err != nil {
+		return nil, fmt.Errorf("[Generator] BuildImportList failed: %v", err)
+	}
 	err = codeBuilder.BuildEnums(thrift.Enums)
 	if err != nil {
 		return nil, fmt.Errorf("[Generator] BuildEnums failed: %v", err)
@@ -83,7 +87,7 @@ func (g *Generator) writeOutputDir(c *CodeBuilder) error {
 	}
 
 	// 拼接所生成的代码块，写入文件
-	codeText := fmt.Sprintf("%s\n%s\n%s\n%s\n", c.Package.Code, c.EnumBuilder.String(), c.StructBuilder.String(), c.ServiceBuilder.String())
+	codeText := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n", c.Package.Code, c.ImportBuilder.String(), c.EnumBuilder.String(), c.StructBuilder.String(), c.ServiceBuilder.String())
 	_, writeErr := file.WriteString(codeText)
 	if writeErr != nil {
 		return fmt.Errorf("write file: %s failed. message: %v", targetFilename, writeErr)
