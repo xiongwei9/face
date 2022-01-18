@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/samuel/go-thrift/parser"
 )
@@ -73,7 +74,6 @@ func (g *Generator) writeOutputDir(c *CodeBuilder) error {
 		return fmt.Errorf("%s is not dictionary", outputDir)
 	}
 
-	// TODO: path join in Windows
 	// 以入口thrift文件名为所生成的go文件名
 	goFilename := getGoFilename(g.Entry)
 	targetFilename := path.Join(outputDir, goFilename)
@@ -92,7 +92,7 @@ func (g *Generator) writeOutputDir(c *CodeBuilder) error {
 }
 
 func getGoFilename(originFilename string) string {
-	wholeName := path.Base(originFilename)
+	wholeName := path.Base(filepath.ToSlash(originFilename))
 	suffix := path.Ext(originFilename)
 	return fmt.Sprintf("%s.go", wholeName[0:len(wholeName)-len(suffix)])
 }
