@@ -1,8 +1,10 @@
 package gen
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 
@@ -91,6 +93,23 @@ func (g *Generator) writeOutputDir(c *CodeBuilder) error {
 	_, writeErr := file.WriteString(codeText)
 	if writeErr != nil {
 		return fmt.Errorf("write file: %s failed. message: %v", targetFilename, writeErr)
+	}
+
+	formatCode([]string{targetFilename})
+	return nil
+}
+
+func formatCode(fileList []string) error {
+	for _, file := range fileList {
+		command := exec.Command("go", "fmt", file)
+		command.Stdout = &bytes.Buffer{}
+		command.Stderr = &bytes.Buffer{}
+
+		err := command.Run()
+		if err != nil {
+			fmt.Printf("[gofmt %s] failed: %v", file, err)
+			continue
+		}
 	}
 	return nil
 }
