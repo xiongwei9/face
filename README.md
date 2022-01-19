@@ -4,6 +4,13 @@
 face -i [inputFile] -o [outputDir]
 ````
 
+# TODO LIST
+
+- 类型校验
+- 支持多idl文件
+- 生成代码结构优化
+- 新增接口判断
+
 ## 生成目录结构
 
 ````
